@@ -44,17 +44,16 @@ export default {
           },
           ],
           toolbox: {
-            left: "center",
+            left: "right",
             feature: {
-              dataZoom: {
-                yAxisIndex: "none",
-              },
-              restore: {},
               saveAsImage: {},
             },
           },
+          legend: {
+            data: ['dB(左声道)', 'dB(右声道)']
+          },
           xAxis: {
-            name: "时间",
+            name: "时间/ms",
             data: this.x,
           },
           yAxis: {

@@ -9,9 +9,9 @@
         <el-row>
           <el-col :span="5">
             <template>
-              <p> </p>
-<!--              <el-radio v-model="radio" label="1">波形图</el-radio>-->
-<!--              <el-radio v-model="radio" label="2">频谱图</el-radio>-->
+              <p></p>
+              <el-radio v-model="radio" label="1">波形图</el-radio>
+              <el-radio v-model="radio" label="2">频谱图</el-radio>
             </template>
           </el-col>
           <el-col :span="14" style="display: flex; justify-content: center;">
@@ -45,10 +45,10 @@
             <div>
               <el-card class="card">
                 <b style="display: flex; justify-content: center">wav文件信息</b>
-                <p>声道数量 : {{ nchannels }}</p>
-                <p>量化位数 : {{ sampwidth }}</p>
-                <p>采样频率 : {{ framerate }}</p>
-                <p>采样点数 : {{ nframes }}</p>
+                <p>声道数量 : {{ audio_parmas[0] }}</p>
+                <p>量化位数 : {{ audio_parmas[1] }}</p>
+                <p>采样频率 : {{ audio_parmas[2] }}</p>
+                <p>采样点数 : {{ audio_parmas[3] }}</p>
               </el-card>
             </div>
           </el-col>
@@ -60,7 +60,7 @@
             <line-graph title="音频分析波形图" :data_l="wave_data_l" :data_r="wave_data_r" :x="x" v-if="radio === '1'">
             </line-graph>
             <!--频谱图，横轴为频率，纵轴为幅度-->
-            <!--            <bar-graph title="音频分析频谱图" :data="data" :x="x" v-if="radio === '2'"></bar-graph>-->
+            <bar-graph title="音频分析频谱图" :data="xfp" :x="freq" v-if="radio === '2'"></bar-graph>
           </el-card>
         </div>
       </el-main>
@@ -70,46 +70,32 @@
 
 <script>
 import line from "@/components/line-graph";
-// import bar from "@/components/bar-graph";
+import bar from "@/components/bar-graph";
 import axios from 'axios'
 
 
-// // 成品中需要删除的部分
-// const length = 1000;
-
-//生成递增数组
-function generateArray(start, end) {
-  return Array.from(new Array(end + 1).keys()).slice(start);
-}
-
-// //生成随机数组
-// function randArray(len, min, max) {
-//   return Array.from(
-//       {length: len,},
-//       () => Math.floor(Math.random() * (max - min)) + min
-//   );
+// //生成递增数组
+// function generateArray(start, end) {
+//   return Array.from(new Array(end + 1).keys()).slice(start);
 // }
-
 
 export default {
   name: 'Upload',
   data() {
     return {
-      //传递x轴、表格数据
       fileList: [],
       x: [],
       wave_data_l: [],
       wave_data_r: [],
       radio: '1',
-      nchannels: 0,
-      sampwidth: 0,
-      framerate: 0,
-      nframes: 0,
+      audio_parmas: [],
+      freq: [],
+      xfp: [],
     };
   },
   components: {
     "line-graph": line,
-    // "bar-graph": bar,
+    "bar-graph": bar,
   },
   methods: {
     open() {
@@ -123,23 +109,22 @@ export default {
           .get('http://127.0.0.1:8000/show_data/')
           .then(response => {
             const res = response.data;
-            this.nchannels = res['nchannels'];
-            this.sampwidth = res['sampwidth'];
-            this.framerate = res['framerate'];
-            this.nframes = res['nframes'];
+
+            // wav音频文件信息部分
+            this.audio_parmas = res['audio_params']
+
+            // 波形图部分
             this.wave_data_l = res['data'][0];
             this.wave_data_r = res['data'][1];
-            this.x = generateArray(1,this.wave_data_l.length);
+            this.x = res['time'];
+
+            // 频谱图部分
+            this.xfp = res['xfp']
+            this.freq = res['freq']
           })
           .catch(error => console.log(error));
     }
   },
-  // beforeMount() {
-  //   //在此处给横坐标和表格数据赋值
-  //   this.x = generateArray(1, length)
-  //   this.wave_data_r = randArray(length, 0, 1000)
-  //   this.wave_data_l = randArray(length, 0, 1000)
-  // }
 };
 </script>
 
