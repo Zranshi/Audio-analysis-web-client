@@ -1,21 +1,32 @@
 <template>
-  <div id="main" style="width: 100%;height:400px;"></div>
+  <div id="main" style="width: 100%;height: 400px;"></div>
 </template>
+
 
 <script>
 import * as echarts from "echarts";
 
 export default {
-  name: "bar-graph",
+  name: "waveform",
   data() {
     return {
       chart: '',
     }
   },
   props: {
-    title: {type: String, default: '未赋值的标题'},
-    x: {type: Array},
-    data: {type: Array},
+    title: {
+      type: String,
+      default: '未赋值的标题'
+    },
+    x: {
+      type: Array,
+    },
+    data_l: {
+      type: Array
+    },
+    data_r: {
+      type: Array
+    },
     option: {
       type: Object,
       default() {
@@ -26,12 +37,11 @@ export default {
           tooltip: {
             trigger: "axis",
           },
-          dataZoom: [
-            {
-              startValue: "0",
-            }, {
-              type: "inside",
-            },
+          dataZoom: [{
+            startValue: "0",
+          }, {
+            type: "inside",
+          },
           ],
           toolbox: {
             left: "right",
@@ -39,20 +49,27 @@ export default {
               saveAsImage: {},
             },
           },
+          legend: {
+            data: ['dB(左声道)', 'dB(右声道)']
+          },
           xAxis: {
-            name: '赫兹/Hz',
+            name: "时间/ms",
             data: this.x,
           },
           yAxis: {
             name: '幅度'
           },
-          series: [
-            {
-              name: "dB",
-              smooth: true,
-              type: "line",
-              data: this.data,
-            },
+          series: [{
+            name: "dB(左声道)",
+            smooth: true,
+            type: "line",
+            data: this.data_l,
+          }, {
+            name: "dB(右声道)",
+            smooth: true,
+            type: "line",
+            data: this.data_r,
+          },
           ],
         };
       },
@@ -69,16 +86,17 @@ export default {
     this.init();
   },
   watch: {
-    data: {
+    data_l: {
       handler() {
-        this.option.series[0].data = this.data;
+        this.option.series[0].data = this.data_l;
+        this.option.series[1].data = this.data_r;
         this.option.xAxis.data = this.x;
-        this.chart.setOption(this.option);
+        this.chart.setOption(this.option)
       },
       deep: true,
-      immediate: true,
-    }
-  }
+      immediate: true
+    },
+  },
 };
 </script>
 

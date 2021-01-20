@@ -21,11 +21,11 @@
                 ref="upload"
                 multiple
                 action="http://127.0.0.1:8000/get_wav/"
-                accept=".wav"
                 name="file"
-                :limit="1"
-                :file-list="fileList"
                 :auto-upload="true"
+                :on-remove="handle_remove"
+                :before-upload="before_upload"
+                :on-success="handle_success"
             >
               <i class="el-icon-upload"></i>
               <div class="el-upload__text">
@@ -38,7 +38,7 @@
           </el-col>
           <el-col :span="5">
             <div>
-              <el-button type="primary" round @click="show_data">上传文件<i class="el-icon-upload el-icon--right"></i>
+              <el-button type="primary" round @click="get_data">上传文件<i class="el-icon-upload el-icon--right"></i>
               </el-button>
             </div>
             <br><br>
@@ -57,10 +57,10 @@
         <div>
           <el-card class="box-card">
             <!--波形图，横轴为时间，纵轴为幅度-->
-            <line-graph title="音频分析波形图" :data_l="wave_data_l" :data_r="wave_data_r" :x="x" v-if="radio === '1'">
-            </line-graph>
+            <waveform title="音频分析波形图" :data_l="wave_data_l" :data_r="wave_data_r" :x="x"
+                      v-if="radio === '1'"></waveform>
             <!--频谱图，横轴为频率，纵轴为幅度-->
-            <bar-graph title="音频分析频谱图" :data="xfp" :x="freq" v-if="radio === '2'"></bar-graph>
+            <spectrogram title="音频分析频谱图" :data="xfp" :x="freq" v-if="radio === '2'"></spectrogram>
           </el-card>
         </div>
       </el-main>
@@ -69,61 +69,66 @@
 </template>
 
 <script>
-import line from "@/components/line-graph";
-import bar from "@/components/bar-graph";
-import axios from 'axios'
-
-
-// //生成递增数组
-// function generateArray(start, end) {
-//   return Array.from(new Array(end + 1).keys()).slice(start);
-// }
+import Waveform from "@/components/waveform";
+import Spectrogram from "@/components/spectrogram";
+import {show_data} from '@/api/data'
 
 export default {
   name: 'Upload',
   data() {
     return {
-      fileList: [],
+      // 文件上传列表
+      fileDict: {},
+      // 单选框
+      radio: '1',
+      // 文件信息
+      audio_parmas: [],
+      // 波形图
       x: [],
       wave_data_l: [],
       wave_data_r: [],
-      radio: '1',
-      audio_parmas: [],
+      // 频谱图
       freq: [],
       xfp: [],
     };
   },
   components: {
-    "line-graph": line,
-    "bar-graph": bar,
+    "waveform": Waveform,
+    "spectrogram": Spectrogram,
   },
   methods: {
-    open() {
-      this.$message({
-        message: 'this is a message',
-        type: 'success',
-      })
+    async get_data() {
+      let res = await show_data()
+      res = res['data']
+      // wav音频文件信息部分
+      this.audio_parmas = res['audio_params'];
+      // 波形图部分
+      this.wave_data_l = res['data'][0];
+      this.wave_data_r = res['data'][1];
+      this.x = res['time'];
+      // 频谱图部分
+      this.xfp = res['xfp'];
+      this.freq = res['freq'];
     },
-    show_data() {
-      axios
-          .get('http://127.0.0.1:8000/show_data/')
-          .then(response => {
-            const res = response.data;
-
-            // wav音频文件信息部分
-            this.audio_parmas = res['audio_params']
-
-            // 波形图部分
-            this.wave_data_l = res['data'][0];
-            this.wave_data_r = res['data'][1];
-            this.x = res['time'];
-
-            // 频谱图部分
-            this.xfp = res['xfp']
-            this.freq = res['freq']
-          })
-          .catch(error => console.log(error));
-    }
+    before_upload(file) {
+      const isMav = file.type === 'audio/x-wav' || file.type === 'audio/wav';
+      const isLt30M = file.size / 1024 / 1024 < 30;
+      const isNum = Object.keys(this.fileDict).length < 1;
+      if (!isMav) {
+        this.$message.error('上传文件只能是wav音频文件格式！');
+      } else if (!isLt30M) {
+        this.$message.error('最大上传30MB大小的文件！');
+      } else if (!isNum) {
+        this.$message.error(`最多上传 1 个文件`);
+      }
+      return isMav && isLt30M && isNum;
+    },
+    handle_remove(file) {
+      delete this.fileDict[`${file.name}`]
+    },
+    handle_success(file) {
+      this.fileDict[`${file.name}`] = file.name;
+    },
   },
 };
 </script>

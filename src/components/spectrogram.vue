@@ -1,32 +1,21 @@
 <template>
-  <div id="main" style="width: 100%;height: 400px;"></div>
+  <div id="main" style="width: 100%;height:400px;"></div>
 </template>
-
 
 <script>
 import * as echarts from "echarts";
 
 export default {
-  name: "line-graph",
+  name: "spectrogram",
   data() {
     return {
       chart: '',
     }
   },
   props: {
-    title: {
-      type: String,
-      default: '未赋值的标题'
-    },
-    x: {
-      type: Array,
-    },
-    data_l: {
-      type: Array
-    },
-    data_r: {
-      type: Array
-    },
+    title: {type: String, default: '未赋值的标题'},
+    x: {type: Array},
+    data: {type: Array},
     option: {
       type: Object,
       default() {
@@ -37,11 +26,12 @@ export default {
           tooltip: {
             trigger: "axis",
           },
-          dataZoom: [{
-            startValue: "0",
-          }, {
-            type: "inside",
-          },
+          dataZoom: [
+            {
+              startValue: "0",
+            }, {
+              type: "inside",
+            },
           ],
           toolbox: {
             left: "right",
@@ -49,27 +39,20 @@ export default {
               saveAsImage: {},
             },
           },
-          legend: {
-            data: ['dB(左声道)', 'dB(右声道)']
-          },
           xAxis: {
-            name: "时间/ms",
+            name: '赫兹/Hz',
             data: this.x,
           },
           yAxis: {
             name: '幅度'
           },
-          series: [{
-            name: "dB(左声道)",
-            smooth: true,
-            type: "line",
-            data: this.data_l,
-          }, {
-            name: "dB(右声道)",
-            smooth: true,
-            type: "line",
-            data: this.data_r,
-          },
+          series: [
+            {
+              name: "dB",
+              smooth: true,
+              type: "line",
+              data: this.data,
+            },
           ],
         };
       },
@@ -86,17 +69,16 @@ export default {
     this.init();
   },
   watch: {
-    data_l: {
+    data: {
       handler() {
-        this.option.series[0].data = this.data_l;
-        this.option.series[1].data = this.data_r;
+        this.option.series[0].data = this.data;
         this.option.xAxis.data = this.x;
         this.chart.setOption(this.option);
       },
       deep: true,
-      immediate: true
-    },
-  },
+      immediate: true,
+    }
+  }
 };
 </script>
 
