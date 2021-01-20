@@ -121,12 +121,12 @@ export default {
       } else if (!isNum) {
         this.$message.error(`最多上传 1 个文件`);
       }
-      return isMav && isLt30M && isNum;
+      return isMav && isLt30M && isNum
     },
     handle_remove(file) {
       delete this.fileDict[`${file.name}`]
     },
-    handle_success(file) {
+    handle_success(response, file) {
       this.fileDict[`${file.name}`] = file.name;
     },
   },
